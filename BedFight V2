@@ -1,48 +1,112 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Create the GUI
+-- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HubReachGui"
+screenGui.Name = "HubUI"
 screenGui.Parent = playerGui
 
--- Text Label
-local textLabel = Instance.new("TextLabel")
-textLabel.Size = UDim2.new(0, 300, 0, 50)
-textLabel.Position = UDim2.new(0.5, -150, 0.1, 0)
-textLabel.BackgroundTransparency = 1
-textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-textLabel.Font = Enum.Font.SourceSansBold
-textLabel.TextSize = 20
-textLabel.Text = "Reach: Increases your hitboxes for a tool"
-textLabel.TextXAlignment = Enum.TextXAlignment.Left
-textLabel.Parent = screenGui
+-- Main Hub Frame
+local hubFrame = Instance.new("Frame")
+hubFrame.Size = UDim2.new(0, 400, 0, 300)
+hubFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+hubFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+hubFrame.BackgroundTransparency = 0.4
+hubFrame.Parent = screenGui
 
--- Circular Toggle Button
-local toggleButton = Instance.new("Frame")
-toggleButton.Size = UDim2.new(0, 30, 0, 30)
-toggleButton.Position = UDim2.new(0.5, 160, 0.1, 10) -- next to label
-toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-toggleButton.BorderSizePixel = 0
-toggleButton.AnchorPoint = Vector2.new(0,0)
-toggleButton.Parent = screenGui
-toggleButton.ClipsDescendants = true
-toggleButton.ZIndex = 2
-toggleButton.Rotation = 0
-toggleButton.AnchorPoint = Vector2.new(0,0)
-toggleButton.BackgroundTransparency = 0.2
-toggleButton.Name = "ReachToggle"
+local hubUICorner = Instance.new("UICorner")
+hubUICorner.CornerRadius = UDim.new(0,10)
+hubUICorner.Parent = hubFrame
 
+-- Tab Buttons Frame
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1,0,0,40)
+tabFrame.Position = UDim2.new(0,0,0,0)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = hubFrame
+
+local function createTabButton(name, positionX)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 1, 0)
+    button.Position = UDim2.new(0, positionX, 0, 0)
+    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Text = name
+    button.Font = Enum.Font.SourceSansBold
+    button.TextSize = 18
+    button.Parent = tabFrame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,6)
+    corner.Parent = button
+    return button
+end
+
+local mainTabBtn = createTabButton("Main", 10)
+local combatTabBtn = createTabButton("Combat", 120)
+local miscTabBtn = createTabButton("Misc", 230)
+
+-- Tab Content Frames
+local function createTabFrame()
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 1, -50)
+    frame.Position = UDim2.new(0, 10, 0, 40)
+    frame.BackgroundTransparency = 1
+    frame.Parent = hubFrame
+    return frame
+end
+
+local mainTab = createTabFrame()
+local combatTab = createTabFrame()
+local miscTab = createTabFrame()
+
+-- Only show active tab
+local function switchTab(tab)
+    mainTab.Visible = false
+    combatTab.Visible = false
+    miscTab.Visible = false
+    tab.Visible = true
+end
+
+switchTab(mainTab) -- default
+
+mainTabBtn.MouseButton1Click:Connect(function() switchTab(mainTab) end)
+combatTabBtn.MouseButton1Click:Connect(function() switchTab(combatTab) end)
+miscTabBtn.MouseButton1Click:Connect(function() switchTab(miscTab) end)
+
+-- ======= Combat Tab: Reach Toggle =======
+local reachLabel = Instance.new("TextLabel")
+reachLabel.Size = UDim2.new(0, 200, 0, 30)
+reachLabel.Position = UDim2.new(0, 20, 0, 20)
+reachLabel.BackgroundTransparency = 1
+reachLabel.Text = "Reach"
+reachLabel.Font = Enum.Font.SourceSansBold
+reachLabel.TextColor3 = Color3.fromRGB(255,255,255)
+reachLabel.TextSize = 20
+reachLabel.TextXAlignment = Enum.TextXAlignment.Left
+reachLabel.Parent = combatTab
+
+-- Toggle Button Frame
+local toggleFrame = Instance.new("Frame")
+toggleFrame.Size = UDim2.new(0, 40, 0, 20)
+toggleFrame.Position = UDim2.new(0, 230, 0, 25)
+toggleFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+toggleFrame.Parent = combatTab
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0,10)
+toggleCorner.Parent = toggleFrame
+
+-- Circle inside toggle
 local toggleCircle = Instance.new("Frame")
-toggleCircle.Size = UDim2.new(0, 20, 0, 20)
-toggleCircle.Position = UDim2.new(0, 5, 0, 5)
-toggleCircle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-toggleCircle.BorderSizePixel = 0
-toggleCircle.AnchorPoint = Vector2.new(0,0)
-toggleCircle.Parent = toggleButton
-toggleCircle.Name = "Circle"
+toggleCircle.Size = UDim2.new(0,16,0,16)
+toggleCircle.Position = UDim2.new(0,2,0,2)
+toggleCircle.BackgroundColor3 = Color3.fromRGB(200,0,0)
+toggleCircle.Parent = toggleFrame
+local circleCorner = Instance.new("UICorner")
+circleCorner.CornerRadius = UDim.new(0,8)
+circleCorner.Parent = toggleCircle
 
--- Reach functionality
+-- Reach logic
 local reachEnabled = false
 local reachSize = 10
 
@@ -60,16 +124,17 @@ local function disableReach(tool)
     end
 end
 
-local function toggleReach()
+local function updateReach()
     reachEnabled = not reachEnabled
-    -- Move the toggle circle
+    -- Update circle color
     if reachEnabled then
-        toggleCircle.Position = UDim2.new(0, 5 + 15, 0, 5)
+        toggleCircle.BackgroundColor3 = Color3.fromRGB(0,255,0)
+        toggleCircle.Position = UDim2.new(0,22,0,2)
     else
-        toggleCircle.Position = UDim2.new(0, 5, 0, 5)
+        toggleCircle.BackgroundColor3 = Color3.fromRGB(200,0,0)
+        toggleCircle.Position = UDim2.new(0,2,0,2)
     end
-
-    -- Apply reach to tools
+    -- Apply to all tools
     for _, tool in pairs(player.Backpack:GetChildren()) do
         if tool:IsA("Tool") then
             if reachEnabled then
@@ -81,14 +146,14 @@ local function toggleReach()
     end
 end
 
--- Click the toggle button
-toggleButton.MouseButton1Click:Connect(toggleReach)
+-- Click toggle
+toggleFrame.MouseButton1Click:Connect(updateReach)
 
--- Keybind R to toggle reach
+-- Keybind R
 local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.R then
-        toggleReach()
+        updateReach()
     end
 end)
