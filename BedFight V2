@@ -1,0 +1,94 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create the GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HubReachGui"
+screenGui.Parent = playerGui
+
+-- Text Label
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0, 300, 0, 50)
+textLabel.Position = UDim2.new(0.5, -150, 0.1, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+textLabel.Font = Enum.Font.SourceSansBold
+textLabel.TextSize = 20
+textLabel.Text = "Reach: Increases your hitboxes for a tool"
+textLabel.TextXAlignment = Enum.TextXAlignment.Left
+textLabel.Parent = screenGui
+
+-- Circular Toggle Button
+local toggleButton = Instance.new("Frame")
+toggleButton.Size = UDim2.new(0, 30, 0, 30)
+toggleButton.Position = UDim2.new(0.5, 160, 0.1, 10) -- next to label
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleButton.BorderSizePixel = 0
+toggleButton.AnchorPoint = Vector2.new(0,0)
+toggleButton.Parent = screenGui
+toggleButton.ClipsDescendants = true
+toggleButton.ZIndex = 2
+toggleButton.Rotation = 0
+toggleButton.AnchorPoint = Vector2.new(0,0)
+toggleButton.BackgroundTransparency = 0.2
+toggleButton.Name = "ReachToggle"
+
+local toggleCircle = Instance.new("Frame")
+toggleCircle.Size = UDim2.new(0, 20, 0, 20)
+toggleCircle.Position = UDim2.new(0, 5, 0, 5)
+toggleCircle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+toggleCircle.BorderSizePixel = 0
+toggleCircle.AnchorPoint = Vector2.new(0,0)
+toggleCircle.Parent = toggleButton
+toggleCircle.Name = "Circle"
+
+-- Reach functionality
+local reachEnabled = false
+local reachSize = 10
+
+local function enableReach(tool)
+    if tool:FindFirstChild("Handle") then
+        local handle = tool.Handle
+        handle.Size = handle.Size + Vector3.new(reachSize, reachSize, reachSize)
+    end
+end
+
+local function disableReach(tool)
+    if tool:FindFirstChild("Handle") then
+        local handle = tool.Handle
+        handle.Size = handle.Size - Vector3.new(reachSize, reachSize, reachSize)
+    end
+end
+
+local function toggleReach()
+    reachEnabled = not reachEnabled
+    -- Move the toggle circle
+    if reachEnabled then
+        toggleCircle.Position = UDim2.new(0, 5 + 15, 0, 5)
+    else
+        toggleCircle.Position = UDim2.new(0, 5, 0, 5)
+    end
+
+    -- Apply reach to tools
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            if reachEnabled then
+                enableReach(tool)
+            else
+                disableReach(tool)
+            end
+        end
+    end
+end
+
+-- Click the toggle button
+toggleButton.MouseButton1Click:Connect(toggleReach)
+
+-- Keybind R to toggle reach
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.R then
+        toggleReach()
+    end
+end)
