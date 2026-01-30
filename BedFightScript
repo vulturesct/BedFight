@@ -1,0 +1,307 @@
+-- Game Hub Script
+-- Features: Reach Toggle, Navigation System, Modern UI
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:GetPlayerGui()
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GameHub"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.4
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- UI Corner for Main Frame
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+titleBar.BackgroundTransparency = 0.3
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
+
+-- Title Text
+local titleText = Instance.new("TextLabel")
+titleText.Name = "TitleText"
+titleText.Size = UDim2.new(1, -20, 1, 0)
+titleText.Position = UDim2.new(0, 10, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "Game Hub"
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextSize = 20
+titleText.Font = Enum.Font.GothamBold
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = titleBar
+
+-- Navigation Container
+local navContainer = Instance.new("Frame")
+navContainer.Name = "NavContainer"
+navContainer.Size = UDim2.new(0, 100, 1, -50)
+navContainer.Position = UDim2.new(0, 10, 0, 45)
+navContainer.BackgroundTransparency = 1
+navContainer.Parent = mainFrame
+
+local navLayout = Instance.new("UIListLayout")
+navLayout.SortOrder = Enum.SortOrder.LayoutOrder
+navLayout.Padding = UDim.new(0, 8)
+navLayout.Parent = navContainer
+
+-- Content Container
+local contentContainer = Instance.new("Frame")
+contentContainer.Name = "ContentContainer"
+contentContainer.Size = UDim2.new(1, -120, 1, -50)
+contentContainer.Position = UDim2.new(0, 115, 0, 45)
+contentContainer.BackgroundTransparency = 1
+contentContainer.Parent = mainFrame
+
+-- Page System
+local pages = {}
+local currentPage = nil
+
+-- Function to create navigation button
+local function createNavButton(text, pageIndex)
+	local button = Instance.new("TextButton")
+	button.Name = text .. "Button"
+	button.Size = UDim2.new(1, 0, 0, 35)
+	button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	button.BackgroundTransparency = 0.3
+	button.BorderSizePixel = 0
+	button.Text = text
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.TextSize = 14
+	button.Font = Enum.Font.Gotham
+	button.Parent = navContainer
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
+	
+	button.MouseButton1Click:Connect(function()
+		for _, page in pairs(pages) do
+			page.Visible = false
+		end
+		if pages[pageIndex] then
+			pages[pageIndex].Visible = true
+			currentPage = pages[pageIndex]
+		end
+		
+		-- Update button colors
+		for _, child in pairs(navContainer:GetChildren()) do
+			if child:IsA("TextButton") then
+				child.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+			end
+		end
+		button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	end)
+	
+	return button
+end
+
+-- Function to create a page
+local function createPage(name)
+	local page = Instance.new("Frame")
+	page.Name = name .. "Page"
+	page.Size = UDim2.new(1, 0, 1, 0)
+	page.BackgroundTransparency = 1
+	page.Visible = false
+	page.Parent = contentContainer
+	
+	local pageLayout = Instance.new("UIListLayout")
+	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	pageLayout.Padding = UDim.new(0, 10)
+	pageLayout.Parent = page
+	
+	return page
+end
+
+-- Create Pages
+local combatPage = createPage("Combat")
+local miscPage = createPage("Misc")
+
+pages[1] = combatPage
+pages[2] = miscPage
+
+-- Create Nav Buttons
+createNavButton("Combat", 1)
+createNavButton("Misc", 2)
+
+-- Reach Toggle Variables
+local reachEnabled = false
+local originalReach = {}
+
+-- Function to create toggle button
+local function createToggleButton(parent, text, callback)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 40)
+	container.BackgroundTransparency = 1
+	container.Parent = parent
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.6, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextSize = 14
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = container
+	
+	local toggleButton = Instance.new("TextButton")
+	toggleButton.Size = UDim2.new(0, 60, 0, 30)
+	toggleButton.Position = UDim2.new(1, -60, 0.5, -15)
+	toggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+	toggleButton.BorderSizePixel = 0
+	toggleButton.Text = "OFF"
+	toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	toggleButton.TextSize = 12
+	toggleButton.Font = Enum.Font.GothamBold
+	toggleButton.Parent = container
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = toggleButton
+	
+	local isEnabled = false
+	
+	toggleButton.MouseButton1Click:Connect(function()
+		isEnabled = not isEnabled
+		if isEnabled then
+			toggleButton.BackgroundColor3 = Color3.fromRGB(50, 220, 50)
+			toggleButton.Text = "ON"
+		else
+			toggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+			toggleButton.Text = "OFF"
+		end
+		callback(isEnabled)
+	end)
+	
+	return container
+end
+
+-- Reach Toggle Function
+local function toggleReach(enabled)
+	reachEnabled = enabled
+	
+	local character = player.Character
+	if not character then return end
+	
+	-- Find all tools (swords, weapons)
+	for _, tool in pairs(character:GetDescendants()) do
+		if tool:IsA("Tool") then
+			local handle = tool:FindFirstChild("Handle")
+			if handle then
+				if enabled then
+					-- Store original size
+					if not originalReach[handle] then
+						originalReach[handle] = handle.Size
+					end
+					-- Increase hitbox
+					handle.Size = Vector3.new(10, 10, 10)
+					handle.Transparency = 0.9
+				else
+					-- Restore original size
+					if originalReach[handle] then
+						handle.Size = originalReach[handle]
+						handle.Transparency = 0
+					end
+				end
+			end
+		end
+	end
+	
+	-- Also check backpack
+	for _, tool in pairs(player.Backpack:GetDescendants()) do
+		if tool:IsA("Tool") then
+			local handle = tool:FindFirstChild("Handle")
+			if handle then
+				if enabled then
+					if not originalReach[handle] then
+						originalReach[handle] = handle.Size
+					end
+					handle.Size = Vector3.new(10, 10, 10)
+					handle.Transparency = 0.9
+				else
+					if originalReach[handle] then
+						handle.Size = originalReach[handle]
+						handle.Transparency = 0
+					end
+				end
+			end
+		end
+	end
+end
+
+-- Add Reach Toggle to Combat Page
+createToggleButton(combatPage, "Reach", toggleReach)
+
+-- Character respawn handler
+player.CharacterAdded:Connect(function()
+	wait(1)
+	if reachEnabled then
+		toggleReach(true)
+	end
+end)
+
+-- Make frame draggable
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+titleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- Show first page by default
+pages[1].Visible = true
+currentPage = pages[1]
+navContainer:GetChildren()[1].BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+
+print("Game Hub loaded successfully!")
